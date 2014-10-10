@@ -9,6 +9,7 @@ JiraApi = require('jira').JiraApi
 
 # TODO maybe knock out ~/.versal somehow so this is generic?
 config = fs.readJsonSync path.join process.env.HOME, '.versal/g2j/default.json'
+console.log JSON.stringify config
 
 jira = new JiraApi config.jira.protocol,
   config.jira.host,
@@ -20,10 +21,11 @@ jira = new JiraApi config.jira.protocol,
 github = new GitHubApi
   version: config.github.version
 
-github.authenticate
-  type: 'basic'
-  username: config.github.username
-  password: config.github.password
+if config.github.username && config.github.password
+  github.authenticate
+    type: 'basic'
+    username: config.github.username
+    password: config.github.password
 
 fetchGithubRepoIssues = (client, org, name, callback) ->
   _fetchIssues = (client, org, name, paginationIndex, allIssues, cb) ->
