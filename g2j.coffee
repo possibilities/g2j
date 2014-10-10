@@ -112,8 +112,7 @@ createIssueIfMissing = (client, projectName, issueType, componentName, issue, ca
             description: trackMessage + "\n\n" + issue.gh.body
             project:
               id: projectId
-            components:
-              [ id: componentId ]
+            components: [ id: componentId ]
             issuetype:
               id: issueTypeId
             labels: ['open-source-tracking']
