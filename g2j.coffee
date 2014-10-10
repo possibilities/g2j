@@ -116,6 +116,7 @@ createIssueIfMissing = (client, projectName, issueType, componentName, issue, ca
               [ id: componentId ]
             issuetype:
               id: issueTypeId
+            labels: ['open-source-tracking']
 
         console.log JSON.stringify newIssue
         client.addNewIssue newIssue, (err, _issue) ->
