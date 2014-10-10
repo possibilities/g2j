@@ -7,9 +7,7 @@ path = require 'path'
 GitHubApi = require 'github'
 JiraApi = require('jira').JiraApi
 
-# TODO maybe knock out ~/.versal somehow so this is generic?
-config = fs.readJsonSync path.join process.env.HOME, '.versal/g2j/default.json'
-console.log JSON.stringify config
+config = fs.readJsonSync path.join process.env.HOME, '.g2j/config.json'
 
 jira = new JiraApi config.jira.protocol,
   config.jira.host,
