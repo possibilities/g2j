@@ -132,27 +132,27 @@ findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
       jiraIssue.id == linkedIssue.jira?.id
 
 processNewIssuesForComponent = (component, callback) ->
-  console.log '\n -- processing component:', component
+  console.log '\n -- processing repo:', component.repo
 
-  fetchGithubRepoIssues github, config.org, component, (err, ghIssues) ->
+  fetchGithubRepoIssues github, config.org, component.repo, (err, ghIssues) ->
     if err then return handleErr err
     console.log '    github issues:', ghIssues.length
 
-    fetchJiraComponentIssues jira, config.org, component, (err, jiraIssues) ->
+    fetchJiraComponentIssues jira, config.org, component.repo, (err, jiraIssues) ->
       if err then return handleErr err
       console.log '    jira issues:', jiraIssues.length
 
-      linkedIssues = linkIssues component, ghIssues, jiraIssues
+      linkedIssues = linkIssues component.repo, ghIssues, jiraIssues
 
       unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
       console.log '    try to link issues:', unlinkedGhIssues.length
 
-      createMissing = createIssueIfMissing.bind(null, jira, config.projectName, config.issueType, component)
+      createMissing = createIssueIfMissing.bind(null, jira, component.project, config.issueType, component.repo)
       async.map linkedIssues, createMissing, (err, linkedIssues) ->
         if err then return callback err
         unlinkedJiraIssues = findUnlinkedJiraIssues jiraIssues, linkedIssues
         console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
         callback null, linkedIssues
 
-async.map config.components, processNewIssuesForComponent, (err, components) ->
+async.mapSeries config.components, processNewIssuesForComponent, (err, components) ->
   console.log '\ndone, processed', components.length, 'components'
