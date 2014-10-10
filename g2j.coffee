@@ -7,7 +7,7 @@ path = require 'path'
 GitHubApi = require 'github'
 JiraApi = require('jira').JiraApi
 
-config = fs.readJsonSync path.join process.env.HOME, '.g2j/config.json'
+config = fs.readJsonSync path.join process.env.HOME, '.g2j.json'
 
 jira = new JiraApi config.jira.protocol,
   config.jira.host,
