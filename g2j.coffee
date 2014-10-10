@@ -13,7 +13,7 @@ config = fs.readJsonSync path.join process.env.HOME, '.versal/g2j/default.json'
 jira = new JiraApi config.jira.protocol,
   config.jira.host,
   config.jira.port,
-  config.jira.usename,
+  config.jira.username,
   config.jira.password,
   config.jira.version
 
