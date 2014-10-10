@@ -1,6 +1,6 @@
 # g2j
 
-github issues <-> jira issues
+sync issues between github <-> jira
 
 # summary
 
