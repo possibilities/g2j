@@ -31,9 +31,9 @@ findJiraIssueForGhIssue = (name, ghIssue, jiraIssues) ->
     trackMessage = "Tracked on GH: #{ghIssue.html_url}"
     return jiraIssue.fields.description.indexOf(trackMessage) >= 0
 
-linkIssues = (name, ghIssues, jiraIssues) ->
-  _.reduce ghIssues, (linkedIssues, ghIssue) ->
-    jiraIssue = findJiraIssueForGhIssue name, ghIssue, jiraIssues
+linkIssues = (name, issues) ->
+  _.reduce issues.gh, (linkedIssues, ghIssue) ->
+    jiraIssue = findJiraIssueForGhIssue name, ghIssue, issues.jira
     linkedIssues.push { gh: ghIssue, jira: jiraIssue }
     return linkedIssues
   , []
@@ -57,7 +57,7 @@ processProject = (clients, config, component, callback) ->
     console.log '    github issues:', issues.gh.length
     console.log '    jira issues:', issues.jira.length
 
-    linkedIssues = linkIssues component.repo, issues.gh, issues.jira
+    linkedIssues = linkIssues component.repo, issues
 
     unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
     console.log '    try to link issues:', unlinkedGhIssues.length
