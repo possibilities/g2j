@@ -71,9 +71,9 @@ processProject = (clients, config, component, callback) ->
 
 processAllProjects = (clients, config, callback) ->
   process = processProject.bind(null, clients, config)
-  async.mapSeries config.components, process, (err, components) ->
+  async.mapSeries config.projects, process, (err, projectIssues) ->
     if err then return callback err
-    console.log '\ndone, processed', components.length, 'components'
+    console.log '\ndone, processed', projectIssues.length, 'components'
 
 processAllProjects { github, jira },  config, (err) ->
   if err
