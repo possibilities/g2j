@@ -59,8 +59,7 @@ module.exports =
       jira: fetchJira.bind null, clients.jira, org, repo
     , callback
 
-  createOnJiraIfMissing: (client, projectName, issueType, componentName, issue, callback) ->
-    if issue.jira then return callback null, issue
+  createOnJiraIfMissing: (client, projectName, issueType, componentName, labels, issue, callback) ->
 
     fetchJiraMetaIds client, issueType, projectName, componentName, (err, ids) ->
       if err then return callback err
@@ -75,7 +74,7 @@ module.exports =
           components: [ id: ids.component ]
           issuetype:
             id: ids.issueType
-          labels: ['open-source-tracking']
+          labels: labels
 
       client.addNewIssue newIssue, (err, _issue) ->
         issue.jira = _issue
