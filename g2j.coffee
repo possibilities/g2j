@@ -150,8 +150,13 @@ processNewIssuesForComponent = (github, jira, config, component, callback) ->
       console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
       callback null, issues
 
-async.mapSeries config.components, processNewIssuesForComponent.bind(null, github, jira, config), (err, components) ->
+main = (github, jira, config, callback) ->
+  process = processNewIssuesForComponent.bind(null, github, jira, config)
+  async.mapSeries config.components, process, (err, components) ->
+    if err then return callback err
+    console.log '\ndone, processed', components.length, 'components'
+
+main github, jira, config, ->
   if err
     console.error err
     process.exit 1
-  console.log '\ndone, processed', components.length, 'components'
