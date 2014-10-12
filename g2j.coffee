@@ -81,14 +81,17 @@ fetchCollectionAndFind = (fetcher, query, callback) ->
     item = _.findWhere collection, query
     callback null, item?.id
 
-createIssueIfMissing = (client, projectName, issueType, componentName, issue, callback) ->
-  if issue.jira then return callback null, issue
-
+fetchMetaIds = (client, issueType, projectName, componentName, callback) ->
   async.parallel {
     issueType: fetchCollectionAndFind.bind null, client.listIssueTypes.bind(client), { name: issueType }
     project: fetchCollectionAndFind.bind null, client.listProjects.bind(client), { key: projectName }
     component: fetchCollectionAndFind.bind null, client.listComponents.bind(client, projectName), { name: componentName }
-  }, (err, ids) ->
+  }, callback
+
+createIssueIfMissing = (client, projectName, issueType, componentName, issue, callback) ->
+  if issue.jira then return callback null, issue
+
+  fetchMetaIds client, issueType, projectName, componentName, (err, ids) ->
     if err then return callback err
     trackMessage = "Tracked on GH: #{issue.gh.html_url}"
 
