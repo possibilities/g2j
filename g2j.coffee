@@ -60,6 +60,7 @@ processProject = (clients, config, project, callback) ->
       , clients.jira
       , project
       , config
+
     async.map linkedIssues, createMissing, (err, linkedIssues) ->
       if err then return callback err
       unlinkedJiraIssues = findUnlinkedJiraIssues issues.jira, linkedIssues
