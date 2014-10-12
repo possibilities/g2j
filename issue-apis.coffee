@@ -60,7 +60,7 @@ module.exports =
     , callback
 
   createOnJiraIfMissing: (client, projectName, issueType, componentName, issue, callback) ->
-    # if issue.jira then return callback null, issue
+    if issue.jira then return callback null, issue
 
     fetchJiraMetaIds client, issueType, projectName, componentName, (err, ids) ->
       if err then return callback err
@@ -77,6 +77,6 @@ module.exports =
             id: ids.issueType
           labels: ['open-source-tracking']
 
-      # client.addNewIssue newIssue, (err, _issue) ->
-      #   issue.jira = _issue
-      callback null, issue
+      client.addNewIssue newIssue, (err, _issue) ->
+        issue.jira = _issue
+        callback null, issue
