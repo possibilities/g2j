@@ -124,16 +124,16 @@ findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
     _.find linkedIssues, (linkedIssue) ->
       jiraIssue.id == linkedIssue.jira?.id
 
-fetchAllIssues = (github, jira, org, repo, callback) ->
+fetchAllIssues = (clients, org, repo, callback) ->
   async.parallel
-    gh: fetchGithubRepoIssues.bind null, github, org, repo
-    jira: fetchJiraProject.bind null, jira, org, repo
+    gh: fetchGithubRepoIssues.bind null, clients.github, org, repo
+    jira: fetchJiraProject.bind null, clients.jira, org, repo
   , callback
 
-processProject = (github, jira, config, component, callback) ->
+processProject = (clients, config, component, callback) ->
   console.log '\n -- processing repo:', component.repo
 
-  fetchAllIssues github, jira, config.org, component.repo, (err, issues) ->
+  fetchAllIssues clients, config.org, component.repo, (err, issues) ->
     if err then return callback err
     console.log '    github issues:', issues.gh.length
     console.log '    jira issues:', issues.jira.length
@@ -150,13 +150,13 @@ processProject = (github, jira, config, component, callback) ->
       console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
       callback null, issues
 
-processAllProjects = (github, jira, config, callback) ->
-  process = processProject.bind(null, github, jira, config)
+processAllProjects = (clients, config, callback) ->
+  process = processProject.bind(null, clients, config)
   async.mapSeries config.components, process, (err, components) ->
     if err then return callback err
     console.log '\ndone, processed', components.length, 'components'
 
-processAllProjects github, jira, config, ->
+processAllProjects { github, jira } , config, ->
   if err
     console.error err
     process.exit 1
