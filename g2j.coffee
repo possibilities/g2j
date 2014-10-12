@@ -75,7 +75,7 @@ processAllProjects = (clients, config, callback) ->
     if err then return callback err
     console.log '\ndone, processed', components.length, 'components'
 
-processAllProjects { github, jira } , config, (err) ->
+processAllProjects { github, jira },  config, (err) ->
   if err
     console.error err
     process.exit 1
