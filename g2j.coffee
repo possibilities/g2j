@@ -130,7 +130,7 @@ fetchAllIssues = (github, jira, org, repo, callback) ->
     jira: fetchJiraComponentIssues.bind null, jira, org, repo
   , callback
 
-processNewIssuesForComponent = (github, jira, config, component, callback) ->
+processComponent = (github, jira, config, component, callback) ->
   console.log '\n -- processing repo:', component.repo
 
   fetchAllIssues github, jira, config.org, component.repo, (err, issues) ->
@@ -150,13 +150,13 @@ processNewIssuesForComponent = (github, jira, config, component, callback) ->
       console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
       callback null, issues
 
-main = (github, jira, config, callback) ->
-  process = processNewIssuesForComponent.bind(null, github, jira, config)
+processAllComponents = (github, jira, config, callback) ->
+  process = processComponent.bind(null, github, jira, config)
   async.mapSeries config.components, process, (err, components) ->
     if err then return callback err
     console.log '\ndone, processed', components.length, 'components'
 
-main github, jira, config, ->
+processAllComponents github, jira, config, ->
   if err
     console.error err
     process.exit 1
