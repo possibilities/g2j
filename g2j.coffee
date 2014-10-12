@@ -3,6 +3,7 @@ async = require 'async'
 jira = require 'jira'
 fs = require 'fs-extra'
 path = require 'path'
+issues = require './issues'
 
 GitHubApi = require 'github'
 JiraApi = require('jira').JiraApi
@@ -24,44 +25,6 @@ if config.github.username && config.github.password
     type: 'basic'
     username: config.github.username
     password: config.github.password
-
-fetchGithubRepoIssues = (client, org, name, callback) ->
-  _fetchIssues = (client, org, name, paginationIndex, allIssues, cb) ->
-    client.issues.repoIssues
-      repo: name
-      user: org
-      page: paginationIndex
-    , (err, issues) ->
-      if err then return callback err
-      if issues?.length
-        allIssues = allIssues.concat issues
-        _fetchIssues client, org, name, ++paginationIndex, allIssues, cb
-      else
-        cb null, allIssues
-
-  _fetchIssues client, org, name, 1, [], (err, issues) ->
-    if err then return callback err
-    issues = _.reject issues, (issue) ->
-      issue.pull_request?.url
-    callback null, issues
-
-fetchJiraProject = (client, org, name, callback) ->
-  _fetchIssues = (client, org, name, allIssues, cb) ->
-    options =
-      startAt: allIssues.length
-    client.searchJira "component = #{name}", options, (err, results) ->
-      if err
-        cb err
-      else if issues = results.issues
-        if issues.length
-          allIssues = allIssues.concat issues
-          _fetchIssues client, org, name, allIssues, cb
-        else
-          cb null, allIssues
-      else
-        callback new Error 'no issues found'
-
-  _fetchIssues client, org, name, [], callback
 
 findJiraIssueForGhIssue = (name, ghIssue, jiraIssues) ->
   _.find jiraIssues, (jiraIssue) ->
@@ -115,16 +78,10 @@ findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
     _.find linkedIssues, (linkedIssue) ->
       jiraIssue.id == linkedIssue.jira?.id
 
-fetchAllIssues = (clients, org, repo, callback) ->
-  async.parallel
-    gh: fetchGithubRepoIssues.bind null, clients.github, org, repo
-    jira: fetchJiraProject.bind null, clients.jira, org, repo
-  , callback
-
 processProject = (clients, config, component, callback) ->
   console.log '\n -- processing repo:', component.repo
 
-  fetchAllIssues clients, config.org, component.repo, (err, issues) ->
+  issues.fetchAll clients, config.org, component.repo, (err, issues) ->
     if err then return callback err
     console.log '    github issues:', issues.gh.length
     console.log '    jira issues:', issues.jira.length
