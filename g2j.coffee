@@ -148,7 +148,7 @@ processNewIssuesForComponent = (github, jira, config, component, callback) ->
       if err then return callback err
       unlinkedJiraIssues = findUnlinkedJiraIssues issues.jira, linkedIssues
       console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
-      callback null, linkedIssues
+      callback null, issues
 
 async.mapSeries config.components, processNewIssuesForComponent.bind(null, github, jira, config), (err, components) ->
   if err
