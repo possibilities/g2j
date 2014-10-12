@@ -45,7 +45,7 @@ fetchGithubRepoIssues = (client, org, name, callback) ->
       issue.pull_request?.url
     callback null, issues
 
-fetchJiraComponentIssues = (client, org, name, callback) ->
+fetchJiraProject = (client, org, name, callback) ->
   _fetchIssues = (client, org, name, allIssues, cb) ->
     options =
       startAt: allIssues.length
@@ -81,8 +81,8 @@ fetchProjectId = (client, projectName, callback) ->
     project = _.findWhere projects, key: projectName
     callback null, project?.id
 
-fetchComponentId = (client, projectName, componentName, callback) ->
-  client.listComponents projectName, (err, components) ->
+fetchProject = (client, projectName, componentName, callback) ->
+  client.listProject projectName, (err, components) ->
     if err then return callback err
     component = _.findWhere components, name: componentName
     callback null, component?.id
@@ -100,7 +100,7 @@ createIssueIfMissing = (client, projectName, issueType, componentName, issue, ca
     if err then return callback err
     fetchProjectId jira, projectName, (err, projectId) ->
       if err then return callback err
-      fetchComponentId jira, projectName, componentName, (err, componentId) ->
+      fetchProject jira, projectName, componentName, (err, componentId) ->
         if err then return callback err
         trackMessage = "Tracked on GH: #{issue.gh.html_url}"
 
@@ -127,10 +127,10 @@ findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
 fetchAllIssues = (github, jira, org, repo, callback) ->
   async.parallel
     gh: fetchGithubRepoIssues.bind null, github, org, repo
-    jira: fetchJiraComponentIssues.bind null, jira, org, repo
+    jira: fetchJiraProject.bind null, jira, org, repo
   , callback
 
-processComponent = (github, jira, config, component, callback) ->
+processProject = (github, jira, config, component, callback) ->
   console.log '\n -- processing repo:', component.repo
 
   fetchAllIssues github, jira, config.org, component.repo, (err, issues) ->
@@ -150,13 +150,13 @@ processComponent = (github, jira, config, component, callback) ->
       console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
       callback null, issues
 
-processAllComponents = (github, jira, config, callback) ->
-  process = processComponent.bind(null, github, jira, config)
+processAllProjects = (github, jira, config, callback) ->
+  process = processProject.bind(null, github, jira, config)
   async.mapSeries config.components, process, (err, components) ->
     if err then return callback err
     console.log '\ndone, processed', components.length, 'components'
 
-processAllComponents github, jira, config, ->
+processAllProjects github, jira, config, ->
   if err
     console.error err
     process.exit 1
