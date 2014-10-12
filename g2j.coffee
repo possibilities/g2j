@@ -84,28 +84,28 @@ fetchCollectionAndFind = (fetcher, query, callback) ->
 createIssueIfMissing = (client, projectName, issueType, componentName, issue, callback) ->
   if issue.jira then return callback null, issue
 
-  fetchCollectionAndFind client.listIssueTypes.bind(client), { name: issueType }, (err, issueTypeId) ->
+  async.parallel {
+    issueType: fetchCollectionAndFind.bind null, client.listIssueTypes.bind(client), { name: issueType }
+    project: fetchCollectionAndFind.bind null, client.listProjects.bind(client), { key: projectName }
+    component: fetchCollectionAndFind.bind null, client.listComponents.bind(client, projectName), { name: componentName }
+  }, (err, ids) ->
     if err then return callback err
-    fetchCollectionAndFind client.listProjects.bind(client), { key: projectName }, (err, projectId) ->
-      if err then return callback err
-      fetchCollectionAndFind client.listComponents.bind(client, projectName), { name: componentName }, (err, componentId) ->
-        if err then return callback err
-        trackMessage = "Tracked on GH: #{issue.gh.html_url}"
+    trackMessage = "Tracked on GH: #{issue.gh.html_url}"
 
-        newIssue =
-          fields:
-            summary: issue.gh.title
-            description: trackMessage + "\n\n" + issue.gh.body
-            project:
-              id: projectId
-            components: [ id: componentId ]
-            issuetype:
-              id: issueTypeId
-            labels: ['open-source-tracking']
+    newIssue =
+      fields:
+        summary: issue.gh.title
+        description: trackMessage + "\n\n" + issue.gh.body
+        project:
+          id: ids.project
+        components: [ id: ids.component ]
+        issuetype:
+          id: ids.issueType
+        labels: ['open-source-tracking']
 
-        client.addNewIssue newIssue, (err, _issue) ->
-          issue.jira = _issue
-          callback null, issue
+    client.addNewIssue newIssue, (err, _issue) ->
+      issue.jira = _issue
+      callback null, issue
 
 findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
   _.reject jiraIssues, (jiraIssue) ->
