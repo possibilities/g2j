@@ -41,12 +41,12 @@ fetchJira = (client, org, name, callback) ->
 
 fetchJiraMetaIds = (client, issueType, projectName, componentName, callback) ->
   async.parallel {
-    issueType: fetchCollectionAndFind.bind null, client.listIssueTypes.bind(client), { name: issueType }
-    project: fetchCollectionAndFind.bind null, client.listProjects.bind(client), { key: projectName }
-    component: fetchCollectionAndFind.bind null, client.listComponents.bind(client, projectName), { name: componentName }
+    issueType: fetchCollectionAndFindId.bind null, client.listIssueTypes.bind(client), { name: issueType }
+    project: fetchCollectionAndFindId.bind null, client.listProjects.bind(client), { key: projectName }
+    component: fetchCollectionAndFindId.bind null, client.listComponents.bind(client, projectName), { name: componentName }
   }, callback
 
-fetchCollectionAndFind = (fetcher, query, callback) ->
+fetchCollectionAndFindId = (fetcher, query, callback) ->
   fetcher (err, collection) ->
     if err then return callback err
     item = _.findWhere collection, query
