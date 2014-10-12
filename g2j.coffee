@@ -56,7 +56,7 @@ processProject = (clients, config, component, callback) ->
     unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
     console.log '    try to link issues:', unlinkedGhIssues.length
 
-    createMissing = issueApis.createOnJiraIfMissing.bind(issues, clients.jira, component.project, config.issueType, component.name)
+    createMissing = issueApis.createOnJiraIfMissing.bind(issues, clients.jira, component.jiraProject, config.issueType, component.name)
     async.map linkedIssues, createMissing, (err, linkedIssues) ->
       if err then return callback err
       unlinkedJiraIssues = findUnlinkedJiraIssues issues.jira, linkedIssues
