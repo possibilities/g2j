@@ -1,9 +1,9 @@
 _ = require 'underscore'
 async = require 'async'
-jira = require 'jira'
 fs = require 'fs-extra'
 path = require 'path'
 issueApis = require './issue-apis'
+issueData = require './issue-data'
 
 GitHubApi = require 'github'
 JiraApi = require('jira').JiraApi
@@ -26,23 +26,6 @@ if config.github.username && config.github.password
     username: config.github.username
     password: config.github.password
 
-findJiraIssueForGhIssue = (name, ghIssue, jiraIssues) ->
-  _.find jiraIssues, (jiraIssue) ->
-    trackMessage = "Tracked on GH: #{ghIssue.html_url}"
-    return jiraIssue.fields.description.indexOf(trackMessage) >= 0
-
-linkIssues = (name, issues) ->
-  _.reduce issues.gh, (linkedIssues, ghIssue) ->
-    jiraIssue = findJiraIssueForGhIssue name, ghIssue, issues.jira
-    linkedIssues.push { gh: ghIssue, jira: jiraIssue }
-    return linkedIssues
-  , []
-
-findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
-  _.reject jiraIssues, (jiraIssue) ->
-    _.find linkedIssues, (linkedIssue) ->
-      jiraIssue.id == linkedIssue.jira?.id
-
 processProject = (clients, config, project, callback) ->
   console.log '\n -- processing repo:', project.name
 
@@ -51,7 +34,7 @@ processProject = (clients, config, project, callback) ->
     console.log '    github issues:', issues.gh.length
     console.log '    jira issues:', issues.jira.length
 
-    linkedIssues = linkIssues project.name, issues
+    linkedIssues = issueData.linkIssues project.name, issues
 
     unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
     console.log '    try to link issues:', unlinkedGhIssues.length
@@ -63,7 +46,7 @@ processProject = (clients, config, project, callback) ->
 
     async.map linkedIssues, createMissing, (err, linkedIssues) ->
       if err then return callback err
-      unlinkedJiraIssues = findUnlinkedJiraIssues issues.jira, linkedIssues
+      unlinkedJiraIssues = issueData.findUnlinkedJiraIssues issues.jira, linkedIssues
       console.log '    unlinked jira issues:'
         , JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
       callback null, issues
