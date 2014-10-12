@@ -3,7 +3,7 @@ async = require 'async'
 jira = require 'jira'
 fs = require 'fs-extra'
 path = require 'path'
-issueApis = require './issues'
+issueApis = require './issue-apis'
 
 GitHubApi = require 'github'
 JiraApi = require('jira').JiraApi
