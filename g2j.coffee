@@ -56,11 +56,15 @@ processProject = (clients, config, project, callback) ->
     unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
     console.log '    try to link issues:', unlinkedGhIssues.length
 
-    createMissing = issueApis.createOnJiraIfMissing.bind(issues, clients.jira, project, config)
+    createMissing = issueApis.createOnJiraIfMissing.bind issues
+      , clients.jira
+      , project
+      , config
     async.map linkedIssues, createMissing, (err, linkedIssues) ->
       if err then return callback err
       unlinkedJiraIssues = findUnlinkedJiraIssues issues.jira, linkedIssues
-      console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
+      console.log '    unlinked jira issues:'
+        , JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
       callback null, issues
 
 processAllProjects = (clients, config, callback) ->
