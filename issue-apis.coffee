@@ -46,6 +46,12 @@ fetchJiraMetaIds = (client, issueType, projectName, componentName, callback) ->
     component: fetchCollectionAndFind.bind null, client.listComponents.bind(client, projectName), { name: componentName }
   }, callback
 
+fetchCollectionAndFind = (fetcher, query, callback) ->
+  fetcher (err, collection) ->
+    if err then return callback err
+    item = _.findWhere collection, query
+    callback null, item?.id
+
 module.exports =
   fetchAll: (clients, org, repo, callback) ->
     async.parallel
@@ -54,7 +60,7 @@ module.exports =
     , callback
 
   createOnJiraIfMissing: (client, projectName, issueType, componentName, issue, callback) ->
-    if issue.jira then return callback null, issue
+    # if issue.jira then return callback null, issue
 
     fetchJiraMetaIds client, issueType, projectName, componentName, (err, ids) ->
       if err then return callback err
@@ -71,6 +77,6 @@ module.exports =
             id: ids.issueType
           labels: ['open-source-tracking']
 
-      client.addNewIssue newIssue, (err, _issue) ->
-        issue.jira = _issue
-        callback null, issue
+      # client.addNewIssue newIssue, (err, _issue) ->
+      #   issue.jira = _issue
+      callback null, issue

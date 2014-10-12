@@ -38,12 +38,6 @@ linkIssues = (name, issues) ->
     return linkedIssues
   , []
 
-fetchCollectionAndFind = (fetcher, query, callback) ->
-  fetcher (err, collection) ->
-    if err then return callback err
-    item = _.findWhere collection, query
-    callback null, item?.id
-
 findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
   _.reject jiraIssues, (jiraIssue) ->
     _.find linkedIssues, (linkedIssue) ->
