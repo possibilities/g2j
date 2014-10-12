@@ -75,32 +75,20 @@ linkIssues = (name, ghIssues, jiraIssues) ->
     return linkedIssues
   , []
 
-fetchProjectId = (client, projectName, callback) ->
-  client.listProjects (err, projects) ->
+fetchCollectionAndFind = (fetcher, query, callback) ->
+  fetcher (err, collection) ->
     if err then return callback err
-    project = _.findWhere projects, key: projectName
-    callback null, project?.id
-
-fetchProject = (client, projectName, componentName, callback) ->
-  client.listProject projectName, (err, components) ->
-    if err then return callback err
-    component = _.findWhere components, name: componentName
-    callback null, component?.id
-
-fetchIssueTypeId = (client, issueType, callback) ->
-  client.listIssueTypes (err, issueTypes) ->
-    if err then return callback err
-    issueType = _.findWhere issueTypes, name: issueType
-    callback null, issueType?.id
+    item = _.findWhere collection, query
+    callback null, item?.id
 
 createIssueIfMissing = (client, projectName, issueType, componentName, issue, callback) ->
   if issue.jira then return callback null, issue
 
-  fetchIssueTypeId jira, issueType, (err, issueTypeId) ->
+  fetchCollectionAndFind client.listIssueTypes.bind(client), { name: issueType }, (err, issueTypeId) ->
     if err then return callback err
-    fetchProjectId jira, projectName, (err, projectId) ->
+    fetchCollectionAndFind client.listProjects.bind(client), { key: projectName }, (err, projectId) ->
       if err then return callback err
-      fetchProject jira, projectName, componentName, (err, componentId) ->
+      fetchCollectionAndFind client.listComponents.bind(client, projectName), { name: componentName }, (err, componentId) ->
         if err then return callback err
         trackMessage = "Tracked on GH: #{issue.gh.html_url}"
 
@@ -143,7 +131,7 @@ processProject = (clients, config, component, callback) ->
     unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
     console.log '    try to link issues:', unlinkedGhIssues.length
 
-    createMissing = createIssueIfMissing.bind(null, jira, component.project, config.issueType, component.repo)
+    createMissing = createIssueIfMissing.bind(null, clients.jira, component.project, config.issueType, component.repo)
     async.map linkedIssues, createMissing, (err, linkedIssues) ->
       if err then return callback err
       unlinkedJiraIssues = findUnlinkedJiraIssues issues.jira, linkedIssues
