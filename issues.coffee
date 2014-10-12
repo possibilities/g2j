@@ -39,9 +39,38 @@ fetchJira = (client, org, name, callback) ->
 
   _fetchIssues client, org, name, [], callback
 
+fetchMetaIds = (client, issueType, projectName, componentName, callback) ->
+  async.parallel {
+    issueType: fetchCollectionAndFind.bind null, client.listIssueTypes.bind(client), { name: issueType }
+    project: fetchCollectionAndFind.bind null, client.listProjects.bind(client), { key: projectName }
+    component: fetchCollectionAndFind.bind null, client.listComponents.bind(client, projectName), { name: componentName }
+  }, callback
+
 module.exports =
   fetchAll: (clients, org, repo, callback) ->
     async.parallel
       gh: fetchGithub.bind null, clients.github, org, repo
       jira: fetchJira.bind null, clients.jira, org, repo
     , callback
+
+  createOnJiraIfMissing: (client, projectName, issueType, componentName, issue, callback) ->
+    if issue.jira then return callback null, issue
+
+    fetchMetaIds client, issueType, projectName, componentName, (err, ids) ->
+      if err then return callback err
+      trackMessage = "Tracked on GH: #{issue.gh.html_url}"
+
+      newIssue =
+        fields:
+          summary: issue.gh.title
+          description: trackMessage + "\n\n" + issue.gh.body
+          project:
+            id: ids.project
+          components: [ id: ids.component ]
+          issuetype:
+            id: ids.issueType
+          labels: ['open-source-tracking']
+
+      client.addNewIssue newIssue, (err, _issue) ->
+        issue.jira = _issue
+        callback null, issue
