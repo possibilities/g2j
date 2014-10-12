@@ -115,42 +115,43 @@ createIssueIfMissing = (client, projectName, issueType, componentName, issue, ca
               id: issueTypeId
             labels: ['open-source-tracking']
 
-        console.log JSON.stringify newIssue
         client.addNewIssue newIssue, (err, _issue) ->
           issue.jira = _issue
           callback null, issue
-
-handleErr = (err) ->
-  console.error err
-  process.exit 1
 
 findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
   _.reject jiraIssues, (jiraIssue) ->
     _.find linkedIssues, (linkedIssue) ->
       jiraIssue.id == linkedIssue.jira?.id
 
-processNewIssuesForComponent = (component, callback) ->
+fetchAllIssues = (github, jira, org, repo, callback) ->
+  async.parallel
+    gh: fetchGithubRepoIssues.bind null, github, org, repo
+    jira: fetchJiraComponentIssues.bind null, jira, org, repo
+  , callback
+
+processNewIssuesForComponent = (github, jira, config, component, callback) ->
   console.log '\n -- processing repo:', component.repo
 
-  fetchGithubRepoIssues github, config.org, component.repo, (err, ghIssues) ->
-    if err then return handleErr err
-    console.log '    github issues:', ghIssues.length
+  fetchAllIssues github, jira, config.org, component.repo, (err, issues) ->
+    if err then return callback err
+    console.log '    github issues:', issues.gh.length
+    console.log '    jira issues:', issues.jira.length
 
-    fetchJiraComponentIssues jira, config.org, component.repo, (err, jiraIssues) ->
-      if err then return handleErr err
-      console.log '    jira issues:', jiraIssues.length
+    linkedIssues = linkIssues component.repo, issues.gh, issues.jira
 
-      linkedIssues = linkIssues component.repo, ghIssues, jiraIssues
+    unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
+    console.log '    try to link issues:', unlinkedGhIssues.length
 
-      unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
-      console.log '    try to link issues:', unlinkedGhIssues.length
+    createMissing = createIssueIfMissing.bind(null, jira, component.project, config.issueType, component.repo)
+    async.map linkedIssues, createMissing, (err, linkedIssues) ->
+      if err then return callback err
+      unlinkedJiraIssues = findUnlinkedJiraIssues issues.jira, linkedIssues
+      console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
+      callback null, linkedIssues
 
-      createMissing = createIssueIfMissing.bind(null, jira, component.project, config.issueType, component.repo)
-      async.map linkedIssues, createMissing, (err, linkedIssues) ->
-        if err then return callback err
-        unlinkedJiraIssues = findUnlinkedJiraIssues jiraIssues, linkedIssues
-        console.log '    unlinked jira issues:', JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
-        callback null, linkedIssues
-
-async.mapSeries config.components, processNewIssuesForComponent, (err, components) ->
+async.mapSeries config.components, processNewIssuesForComponent.bind(null, github, jira, config), (err, components) ->
+  if err
+    console.error err
+    process.exit 1
   console.log '\ndone, processed', components.length, 'components'
