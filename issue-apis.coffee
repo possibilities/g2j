@@ -39,11 +39,11 @@ fetchJira = (client, org, name, callback) ->
 
   _fetchIssues client, org, name, [], callback
 
-fetchJiraMetaIds = (client, issueType, projectName, componentName, callback) ->
+fetchJiraMetaIds = (client, issueType, project, callback) ->
   async.parallel {
     issueType: fetchCollectionAndFindId.bind null, client.listIssueTypes.bind(client), { name: issueType }
-    project: fetchCollectionAndFindId.bind null, client.listProjects.bind(client), { key: projectName }
-    component: fetchCollectionAndFindId.bind null, client.listComponents.bind(client, projectName), { name: componentName }
+    project: fetchCollectionAndFindId.bind null, client.listProjects.bind(client), { key: project.jiraProject }
+    component: fetchCollectionAndFindId.bind null, client.listComponents.bind(client, project.jiraProject), { name: project.name }
   }, callback
 
 fetchCollectionAndFindId = (fetcher, query, callback) ->
@@ -62,7 +62,7 @@ module.exports =
   createOnJiraIfMissing: (client, project, config, issue, callback) ->
     if issue.jira then return callback null, issue
 
-    fetchJiraMetaIds client, config.issueType, project.jiraProject, project.name, (err, ids) ->
+    fetchJiraMetaIds client, config.issueType, project, (err, ids) ->
       if err then return callback err
       trackMessage = "Tracked on GH: #{issue.gh.html_url}"
 
