@@ -43,20 +43,20 @@ findUnlinkedJiraIssues = (jiraIssues, linkedIssues) ->
     _.find linkedIssues, (linkedIssue) ->
       jiraIssue.id == linkedIssue.jira?.id
 
-processProject = (clients, config, component, callback) ->
-  console.log '\n -- processing repo:', component.name
+processProject = (clients, config, project, callback) ->
+  console.log '\n -- processing repo:', project.name
 
-  issueApis.fetchAll clients, config.org, component.name, (err, issues) ->
+  issueApis.fetchAll clients, config.org, project.name, (err, issues) ->
     if err then return callback err
     console.log '    github issues:', issues.gh.length
     console.log '    jira issues:', issues.jira.length
 
-    linkedIssues = linkIssues component.name, issues
+    linkedIssues = linkIssues project.name, issues
 
     unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
     console.log '    try to link issues:', unlinkedGhIssues.length
 
-    createMissing = issueApis.createOnJiraIfMissing.bind(issues, clients.jira, component.jiraProject, config.issueType, component.name, config.labels)
+    createMissing = issueApis.createOnJiraIfMissing.bind(issues, clients.jira, project.jiraProject, config.issueType, project.name, config.labels)
     async.map linkedIssues, createMissing, (err, linkedIssues) ->
       if err then return callback err
       unlinkedJiraIssues = findUnlinkedJiraIssues issues.jira, linkedIssues
