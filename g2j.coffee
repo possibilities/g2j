@@ -87,7 +87,7 @@ fetchProject = (client, projectName, componentName, callback) ->
     component = _.findWhere components, name: componentName
     callback null, component?.id
 
-fetchIssueTypeId = (issueType, client, callback) ->
+fetchIssueTypeId = (client, issueType, callback) ->
   client.listIssueTypes (err, issueTypes) ->
     if err then return callback err
     issueType = _.findWhere issueTypes, name: issueType
@@ -96,7 +96,7 @@ fetchIssueTypeId = (issueType, client, callback) ->
 createIssueIfMissing = (client, projectName, issueType, componentName, issue, callback) ->
   if issue.jira then return callback null, issue
 
-  fetchIssueTypeId issueType, jira, (err, issueTypeId) ->
+  fetchIssueTypeId jira, issueType, (err, issueTypeId) ->
     if err then return callback err
     fetchProjectId jira, projectName, (err, projectId) ->
       if err then return callback err
