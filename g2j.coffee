@@ -46,16 +46,11 @@ processProject = (clients, config, project, callback) ->
       , project
       , config
 
-    async.map issues.gh, addMissing, (err, ghIssues) ->
-      if err then return callback err
-      issues.gh = ghIssues
-      callback null, issues
+    async.map issues.gh, addMissing, -> console.log '\ndone.'
 
 processAllProjects = (clients, config, callback) ->
   process = processProject.bind null, clients, config
-  async.mapSeries config.projects, process, (err, projectIssues) ->
-    if err then return callback err
-    console.log '\ndone, processed', projectIssues.length, 'components'
+  async.mapSeries config.projects, process, callback
 
 processAllProjects { github, jira },  config, (err) ->
   if err

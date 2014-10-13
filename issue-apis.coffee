@@ -84,6 +84,4 @@ module.exports =
             id: ids.issueType
           labels: config.labels
 
-      client.addNewIssue newIssue, (err, _issue) ->
-        issue.jira = _issue
-        callback null, issue
+      client.addNewIssue newIssue, callback
