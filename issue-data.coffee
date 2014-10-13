@@ -1,8 +1,7 @@
 _ = require 'underscore'
 
-findJiraIssueForGhIssue = (name, ghIssue, jiraIssues) ->
-  # make sure we're not mutating anything
-  name = _.clone name
+findJiraIssueForGhIssue = (ghIssue, jiraIssues) ->
+  # try to avoid side effects
   ghIssue = _.clone ghIssue
   jiraIssues = _.clone jiraIssues
 
@@ -11,23 +10,24 @@ findJiraIssueForGhIssue = (name, ghIssue, jiraIssues) ->
     return jiraIssue.fields.description.indexOf(trackMessage) >= 0
 
 module.exports =
-  linkIssues: (name, issues) ->
-    # make sure we're not mutating anything
-    name = _.clone name
+  linkIssues: (issues) ->
+    # try to avoid side effects
     issues = _.clone issues
 
-    _.reduce issues.gh, (linkedIssues, ghIssue) ->
-      jiraIssue = findJiraIssueForGhIssue name, ghIssue, issues.jira
-      linkedIssues.push { gh: ghIssue, jira: jiraIssue }
-      return linkedIssues
-    , []
+    # we're mutating issues here but it's a clone, ok afaic
+    _.each issues.gh, (ghIssue) ->
+      jiraIssue = findJiraIssueForGhIssue ghIssue, issues.jira
+      if jiraIssue
+        ghIssue.jiraIssue = jiraIssue
+        jiraIssue.ghIssue = _.clone ghIssue
+
+    return issues
 
   findUnlinkedJiraIssues: (jiraIssues, linkedIssues) ->
-    # make sure we're not mutating anything
+    # try to avoid side effects
     jiraIssues = _.clone jiraIssues
     linkedIssues = _.clone linkedIssues
 
     _.reject jiraIssues, (jiraIssue) ->
       _.find linkedIssues, (linkedIssue) ->
         jiraIssue.id == linkedIssue.jira?.id
-

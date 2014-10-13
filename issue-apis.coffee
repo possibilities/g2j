@@ -65,17 +65,18 @@ module.exports =
       jira: fetchJira.bind null, clients.jira, org, repo
     , callback
 
-  createOnJiraIfMissing: (client, project, config, issue, callback) ->
-    if issue.jira then return callback null, issue
+  addToJiraIfMissing: (client, project, config, issue, callback) ->
+    return callback null, _.clone(issue) # TEMP
+    if issue.jiraIssue then return callback null, issue
 
     fetchJiraMetaIds client, config.issueType, project, (err, ids) ->
       if err then return callback err
-      trackMessage = "Tracked on GH: #{issue.gh.html_url}"
 
+      trackMessage = "Tracked on GH: #{issue.html_url}"
       newIssue =
         fields:
-          summary: issue.gh.title
-          description: trackMessage + "\n\n" + issue.gh.body
+          summary: issue.title
+          description: trackMessage + "\n\n" + issue.body
           project:
             id: ids.project
           components: [ id: ids.component ]

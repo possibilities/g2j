@@ -33,26 +33,26 @@ processProject = (clients, config, project, callback) ->
     if err then return callback err
     console.log '    github issues:', issues.gh.length
     console.log '    jira issues:', issues.jira.length
+    issues = issueData.linkIssues issues
 
-    linkedIssues = issueData.linkIssues project.name, issues
+    unlinkedGhIssues = _.reject issues.gh, (issue) -> issue.jiraIssue?
+    console.log '    unlinked gh issues:', unlinkedGhIssues.length
 
-    unlinkedGhIssues = _.reject linkedIssues, (issue) -> issue.jira?
-    console.log '    try to link issues:', unlinkedGhIssues.length
+    unlinkedJiraIssues = _.reject issues.jira, (issue) -> issue.ghIssue?
+    console.log '    unlinked jira issues:', unlinkedJiraIssues.length
 
-    createMissing = issueApis.createOnJiraIfMissing.bind issues
+    addMissing = issueApis.addToJiraIfMissing.bind issueApis
       , clients.jira
       , project
       , config
 
-    async.map linkedIssues, createMissing, (err, linkedIssues) ->
+    async.map issues.gh, addMissing, (err, ghIssues) ->
       if err then return callback err
-      unlinkedJiraIssues = issueData.findUnlinkedJiraIssues issues.jira, linkedIssues
-      console.log '    unlinked jira issues:'
-        , JSON.stringify(_.pluck unlinkedJiraIssues, 'key')
+      issues.gh = ghIssues
       callback null, issues
 
 processAllProjects = (clients, config, callback) ->
-  process = processProject.bind(null, clients, config)
+  process = processProject.bind null, clients, config
   async.mapSeries config.projects, process, (err, projectIssues) ->
     if err then return callback err
     console.log '\ndone, processed', projectIssues.length, 'components'
