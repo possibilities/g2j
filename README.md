@@ -4,7 +4,14 @@ sync issues between github <-> jira
 
 # summary
 
-quick and dirty syncing of github and jira issues. right now we just copy unsync'd issues from gh to a new issue is jira, tag it with a url back to the GH issue and leave it alone.
+quick and dirty "syncing" of github and jira issues. right now we just copy unsync'd issues from gh to a new issue is jira, tag it with a url back to the GH issue and leave it alone. the operation is idempotent so you can run it over and over without any effect unless new data is available.
+
+# usage
+
+```
+npm install
+npm start
+```
 
 ## todo
 

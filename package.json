@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "./node_modules/coffee-script/bin/coffee ./g2j.coffee"
+  },
   "dependencies": {
     "github": "~0.2.2",
     "underscore": "~1.7.0",
