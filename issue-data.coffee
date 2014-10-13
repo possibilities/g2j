@@ -22,12 +22,3 @@ module.exports =
         jiraIssue.ghIssue = _.clone ghIssue
 
     return issues
-
-  findUnlinkedJiraIssues: (jiraIssues, linkedIssues) ->
-    # try to avoid side effects
-    jiraIssues = _.clone jiraIssues
-    linkedIssues = _.clone linkedIssues
-
-    _.reject jiraIssues, (jiraIssue) ->
-      _.find linkedIssues, (linkedIssue) ->
-        jiraIssue.id == linkedIssue.jira?.id
