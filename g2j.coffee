@@ -27,7 +27,7 @@ if config.github.username && config.github.password
     password: config.github.password
 
 processProject = (clients, config, project, callback) ->
-  console.log '\n -- processing repo:', project.name
+  console.log '\n -- processing:', project.name
 
   issueApis.fetchAll clients, config.org, project.name, (err, issues) ->
     if err then return callback err
@@ -46,13 +46,14 @@ processProject = (clients, config, project, callback) ->
       , project
       , config
 
-    async.map issues.gh, addMissing, -> console.log '\ndone.'
+    async.map issues.gh, addMissing, callback
 
 processAllProjects = (clients, config, callback) ->
   process = processProject.bind null, clients, config
-  async.mapSeries config.projects, process, callback
+  async.mapSeries config.projects, process, callback, ->
+    console.log '\ndone.'
 
 processAllProjects { github, jira },  config, (err) ->
   if err
-    console.error err
+    console.error 'Error:', err
     process.exit 1
