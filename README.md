@@ -44,4 +44,6 @@ npm start
 
 ## todo
 
-make it more robust: copy comments over as they come in
+copy comments over as they come in
+track title and description changes
+sync progress in one direction or another
