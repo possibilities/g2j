@@ -66,10 +66,12 @@ module.exports =
     , callback
 
   addToJiraIfMissing: (client, project, config, issue, callback) ->
-    return callback null, _.clone(issue) # TEMP
+    console.log 'addToJiraIfMissing', 1, issue.number
     if issue.jiraIssue then return callback null, issue
 
+    console.log 'addToJiraIfMissing', 2
     fetchJiraMetaIds client, config.issueType, project, (err, ids) ->
+      console.log 'addToJiraIfMissing', 3, err
       if err then return callback err
 
       trackMessage = "Tracked on GH: #{issue.html_url}"
