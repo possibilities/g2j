@@ -58,7 +58,7 @@ fetchCollectionAndFindIdByQuery = (fetcher, query, callback) ->
     item = _.findWhere collection, query
     callback null, item?.id
 
-addJiraIssue = (issue, ids, config, callback) ->
+addJiraIssue = (client, issue, ids, config, callback) ->
   trackMessage = "Tracked on GH: #{issue.html_url}"
   newIssue =
     fields:
@@ -85,4 +85,4 @@ module.exports =
     fetchJiraMetaIds client, config.issueType, project, (err, ids) ->
       if err then return callback err
 
-      addJiraIssue issue, ids, config, callback
+      addJiraIssue client, issue, ids, config, callback
