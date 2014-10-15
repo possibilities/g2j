@@ -58,6 +58,20 @@ fetchCollectionAndFindIdByQuery = (fetcher, query, callback) ->
     item = _.findWhere collection, query
     callback null, item?.id
 
+addJiraIssue = (issue, ids, config, callback) ->
+  trackMessage = "Tracked on GH: #{issue.html_url}"
+  newIssue =
+    fields:
+      summary: issue.title
+      description: trackMessage + "\n\n" + issue.body
+      project:
+        id: ids.project
+      components: [ id: ids.component ]
+      issuetype:
+        id: ids.issueType
+      labels: config.labels
+  client.addNewIssue newIssue, callback
+
 module.exports =
   fetchAll: (clients, org, repo, callback) ->
     async.parallel
@@ -66,22 +80,9 @@ module.exports =
     , callback
 
   addToJiraIfMissing: (client, project, config, issue, callback) ->
-    return callback null, _.clone(issue) # TEMP
     if issue.jiraIssue then return callback null, issue
 
     fetchJiraMetaIds client, config.issueType, project, (err, ids) ->
       if err then return callback err
 
-      trackMessage = "Tracked on GH: #{issue.html_url}"
-      newIssue =
-        fields:
-          summary: issue.title
-          description: trackMessage + "\n\n" + issue.body
-          project:
-            id: ids.project
-          components: [ id: ids.component ]
-          issuetype:
-            id: ids.issueType
-          labels: config.labels
-
-      client.addNewIssue newIssue, callback
+      addJiraIssue issue, ids, config, callback
