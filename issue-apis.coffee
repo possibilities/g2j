@@ -59,7 +59,10 @@ fetchCollectionAndFindIdByQuery = (fetcher, query, callback) ->
     callback null, item?.id
 
 addJiraIssue = (client, issue, ids, config, callback) ->
-  trackMessage = "Tracked on GH: #{issue.html_url}"
+  trackMessage = [
+    '!!! THIS IS AN OPEN SOURCE ISSUE. USE GH ISSUES FOR DISCUSSION !!!'
+    "Tracked on GH: #{issue.html_url}"
+  ].join('\n')
   newIssue =
     fields:
       summary: issue.title
